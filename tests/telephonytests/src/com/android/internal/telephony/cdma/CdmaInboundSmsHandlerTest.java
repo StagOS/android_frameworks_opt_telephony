@@ -78,7 +78,6 @@ public class CdmaInboundSmsHandlerTest extends TelephonyTest {
     private FakeSmsContentProvider mContentProvider;
     private InboundSmsTracker mInboundSmsTracker;
     private byte[] mSmsPdu = new byte[]{(byte) 0xFF, (byte) 0xFF, (byte) 0xFF};
-    private int mSubId0 = 0;
 
     private class CdmaInboundSmsHandlerTestHandler extends HandlerThread {
 
@@ -138,17 +137,16 @@ public class CdmaInboundSmsHandlerTest extends TelephonyTest {
                 "1234567890", /* address */
                 "1234567890", /* displayAddress */
                 "This is the message body of a single-part message" /* messageBody */,
-                false, /* isClass0 */
-                mSubId0);
+                false /* isClass0 */);
 
         doReturn(mInboundSmsTracker).when(mTelephonyComponentFactory)
                 .makeInboundSmsTracker(nullable(byte[].class), anyLong(), anyInt(), anyBoolean(),
                 anyBoolean(), nullable(String.class), nullable(String.class),
-                nullable(String.class), anyBoolean(), anyInt());
+                nullable(String.class), anyBoolean());
         doReturn(mInboundSmsTracker).when(mTelephonyComponentFactory)
                 .makeInboundSmsTracker(nullable(byte[].class), anyLong(), anyInt(), anyBoolean(),
                 nullable(String.class), nullable(String.class), anyInt(), anyInt(),
-                anyInt(), anyBoolean(), nullable(String.class), anyBoolean(), anyInt());
+                anyInt(), anyBoolean(), nullable(String.class), anyBoolean());
         doReturn(mInboundSmsTracker).when(mTelephonyComponentFactory)
                 .makeInboundSmsTracker(nullable(Cursor.class), anyBoolean());
 
@@ -234,12 +232,11 @@ public class CdmaInboundSmsHandlerTest extends TelephonyTest {
                 "1234567890", /* address */
                 blockedNumber, /* displayAddress */
                 "This is the message body of a single-part message" /* messageBody */,
-                false, /* isClass0 */
-                mSubId0);
+                false /* isClass0 */);
         doReturn(mInboundSmsTracker).when(mTelephonyComponentFactory)
                 .makeInboundSmsTracker(nullable(byte[].class), anyLong(), anyInt(), anyBoolean(),
                 anyBoolean(), nullable(String.class), nullable(String.class),
-                nullable(String.class), anyBoolean(), anyInt());
+                nullable(String.class), anyBoolean());
         mFakeBlockedNumberContentProvider.mBlockedNumbers.add(blockedNumber);
 
         transitionFromStartupToIdle();

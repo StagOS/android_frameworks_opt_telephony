@@ -42,7 +42,6 @@ public class InboundSmsTracker {
     private final boolean mIs3gpp2WapPdu;
     private final String mMessageBody;
     private final boolean mIsClass0;
-    private final int mSubId;
 
     // Fields for concatenating multi-part SMS messages
     private final String mAddress;
@@ -106,7 +105,7 @@ public class InboundSmsTracker {
      */
     public InboundSmsTracker(byte[] pdu, long timestamp, int destPort, boolean is3gpp2,
             boolean is3gpp2WapPdu, String address, String displayAddress, String messageBody,
-            boolean isClass0, int subId) {
+            boolean isClass0) {
         mPdu = pdu;
         mTimestamp = timestamp;
         mDestPort = destPort;
@@ -120,7 +119,6 @@ public class InboundSmsTracker {
         mReferenceNumber = -1;
         mSequenceNumber = getIndexOffset();     // 0 or 1, depending on type
         mMessageCount = 1;
-        mSubId = subId;
     }
 
     /**
@@ -144,8 +142,7 @@ public class InboundSmsTracker {
      */
     public InboundSmsTracker(byte[] pdu, long timestamp, int destPort, boolean is3gpp2,
             String address, String displayAddress, int referenceNumber, int sequenceNumber,
-            int messageCount, boolean is3gpp2WapPdu, String messageBody, boolean isClass0,
-            int subId) {
+            int messageCount, boolean is3gpp2WapPdu, String messageBody, boolean isClass0) {
         mPdu = pdu;
         mTimestamp = timestamp;
         mDestPort = destPort;
@@ -160,7 +157,6 @@ public class InboundSmsTracker {
         mReferenceNumber = referenceNumber;
         mSequenceNumber = sequenceNumber;
         mMessageCount = messageCount;
-        mSubId = subId;
     }
 
     /**
@@ -194,8 +190,6 @@ public class InboundSmsTracker {
         mTimestamp = cursor.getLong(InboundSmsHandler.DATE_COLUMN);
         mAddress = cursor.getString(InboundSmsHandler.ADDRESS_COLUMN);
         mDisplayAddress = cursor.getString(InboundSmsHandler.DISPLAY_ADDRESS_COLUMN);
-        mSubId = cursor.getInt(SmsBroadcastUndelivered.PDU_PENDING_MESSAGE_PROJECTION_INDEX_MAPPING
-                .get(InboundSmsHandler.SUBID_COLUMN));
 
         if (cursor.getInt(InboundSmsHandler.COUNT_COLUMN) == 1) {
             // single-part message
@@ -255,7 +249,6 @@ public class InboundSmsTracker {
         }
         values.put("count", mMessageCount);
         values.put("message_body", mMessageBody);
-        values.put("sub_id", mSubId);
         return values;
     }
 
@@ -323,10 +316,6 @@ public class InboundSmsTracker {
 
     public boolean isClass0() {
         return mIsClass0;
-    }
-
-    public int getSubId() {
-        return mSubId;
     }
 
     @UnsupportedAppUsage
