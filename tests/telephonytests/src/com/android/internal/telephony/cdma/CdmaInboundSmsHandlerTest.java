@@ -129,24 +129,23 @@ public class CdmaInboundSmsHandlerTest extends TelephonyTest {
         doReturn(true).when(mSmsStorageMonitor).isStorageAvailable();
 
         mInboundSmsTracker = new InboundSmsTracker(
-                mSmsPdu, /* pdu */
-                System.currentTimeMillis(), /* timestamp */
-                -1, /* destPort */
-                true, /* is3gpp2 */
-                false, /* is3gpp2WapPdu */
-                "1234567890", /* address */
-                "1234567890", /* displayAddress */
-                "This is the message body of a single-part message" /* messageBody */,
-                false /* isClass0 */);
+            mSmsPdu, /* pdu */
+            System.currentTimeMillis(), /* timestamp */
+            -1, /* destPort */
+            true, /* is3gpp2 */
+            false, /* is3gpp2WapPdu */
+            "1234567890", /* address */
+            "1234567890", /* displayAddress */
+            "This is the message body of a single-part message" /* messageBody */);
 
         doReturn(mInboundSmsTracker).when(mTelephonyComponentFactory)
                 .makeInboundSmsTracker(nullable(byte[].class), anyLong(), anyInt(), anyBoolean(),
                 anyBoolean(), nullable(String.class), nullable(String.class),
-                nullable(String.class), anyBoolean());
+                nullable(String.class));
         doReturn(mInboundSmsTracker).when(mTelephonyComponentFactory)
                 .makeInboundSmsTracker(nullable(byte[].class), anyLong(), anyInt(), anyBoolean(),
                 nullable(String.class), nullable(String.class), anyInt(), anyInt(),
-                anyInt(), anyBoolean(), nullable(String.class), anyBoolean());
+                anyInt(), anyBoolean(), nullable(String.class));
         doReturn(mInboundSmsTracker).when(mTelephonyComponentFactory)
                 .makeInboundSmsTracker(nullable(Cursor.class), anyBoolean());
 
@@ -224,19 +223,18 @@ public class CdmaInboundSmsHandlerTest extends TelephonyTest {
     public void testNewSmsFromBlockedNumber_noBroadcastsSent() {
         String blockedNumber = "123456789";
         mInboundSmsTracker = new InboundSmsTracker(
-                mSmsPdu, /* pdu */
-                System.currentTimeMillis(), /* timestamp */
-                -1, /* destPort */
-                true, /* is3gpp2 */
-                false, /* is3gpp2WapPdu */
-                "1234567890", /* address */
-                blockedNumber, /* displayAddress */
-                "This is the message body of a single-part message" /* messageBody */,
-                false /* isClass0 */);
+            mSmsPdu, /* pdu */
+            System.currentTimeMillis(), /* timestamp */
+            -1, /* destPort */
+            true, /* is3gpp2 */
+            false, /* is3gpp2WapPdu */
+            "1234567890", /* address */
+            blockedNumber, /* displayAddress */
+            "This is the message body of a single-part message" /* messageBody */);
         doReturn(mInboundSmsTracker).when(mTelephonyComponentFactory)
                 .makeInboundSmsTracker(nullable(byte[].class), anyLong(), anyInt(), anyBoolean(),
                 anyBoolean(), nullable(String.class), nullable(String.class),
-                nullable(String.class), anyBoolean());
+                nullable(String.class));
         mFakeBlockedNumberContentProvider.mBlockedNumbers.add(blockedNumber);
 
         transitionFromStartupToIdle();

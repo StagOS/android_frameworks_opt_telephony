@@ -66,7 +66,6 @@ import android.util.Pair;
 
 import com.android.internal.R;
 import com.android.internal.annotations.VisibleForTesting;
-import com.android.internal.telephony.SmsConstants.MessageClass;
 import com.android.internal.telephony.metrics.TelephonyMetrics;
 import com.android.internal.telephony.util.NotificationChannelController;
 import com.android.internal.util.HexDump;
@@ -758,7 +757,7 @@ public abstract class InboundSmsHandler extends StateMachine {
                     .makeInboundSmsTracker(sms.getPdu(),
                     sms.getTimestampMillis(), destPort, is3gpp2(), false,
                     sms.getOriginatingAddress(), sms.getDisplayOriginatingAddress(),
-                    sms.getMessageBody(), sms.getMessageClass() == MessageClass.CLASS_0);
+                    sms.getMessageBody());
         } else {
             // Create a tracker for this message segment.
             SmsHeader.ConcatRef concatRef = smsHeader.concatRef;
@@ -769,8 +768,7 @@ public abstract class InboundSmsHandler extends StateMachine {
                     .makeInboundSmsTracker(sms.getPdu(),
                     sms.getTimestampMillis(), destPort, is3gpp2(), sms.getOriginatingAddress(),
                     sms.getDisplayOriginatingAddress(), concatRef.refNumber, concatRef.seqNumber,
-                    concatRef.msgCount, false, sms.getMessageBody(),
-                    sms.getMessageClass() == MessageClass.CLASS_0);
+                    concatRef.msgCount, false, sms.getMessageBody());
         }
 
         if (VDBG) log("created tracker: " + tracker);
@@ -989,8 +987,7 @@ public abstract class InboundSmsHandler extends StateMachine {
             pdus, destPort, tracker, resultReceiver, true /* userUnlocked */);
 
         if (!filterInvoked) {
-            dispatchSmsDeliveryIntent(pdus, tracker.getFormat(), destPort, resultReceiver,
-                    tracker.isClass0());
+            dispatchSmsDeliveryIntent(pdus, tracker.getFormat(), destPort, resultReceiver);
         }
 
         return true;
@@ -1084,8 +1081,7 @@ public abstract class InboundSmsHandler extends StateMachine {
         InboundSmsTracker tracker, SmsBroadcastReceiver resultReceiver, boolean userUnlocked) {
         CarrierServicesSmsFilterCallback filterCallback =
                 new CarrierServicesSmsFilterCallback(
-                        pdus, destPort, tracker.getFormat(), resultReceiver, userUnlocked,
-                        tracker.isClass0());
+                        pdus, destPort, tracker.getFormat(), resultReceiver, userUnlocked);
         CarrierServicesSmsFilter carrierServicesFilter = new CarrierServicesSmsFilter(
                 mContext, mPhone, pdus, destPort, tracker.getFormat(),
                 filterCallback, getName(), mLocalLog);
@@ -1182,7 +1178,7 @@ public abstract class InboundSmsHandler extends StateMachine {
     }
 
     @UnsupportedAppUsage
-    private Bundle handleSmsWhitelisting(ComponentName target, boolean bgActivityStartAllowed) {
+    private Bundle handleSmsWhitelisting(ComponentName target) {
         String pkgName;
         String reason;
         if (target != null) {
@@ -1192,23 +1188,16 @@ public abstract class InboundSmsHandler extends StateMachine {
             pkgName = mContext.getPackageName();
             reason = "sms-broadcast";
         }
-        BroadcastOptions bopts = null;
-        Bundle bundle = null;
-        if (bgActivityStartAllowed) {
-            bopts = BroadcastOptions.makeBasic();
-            bopts.setBackgroundActivityStartsAllowed(true);
-            bundle = bopts.toBundle();
-        }
         try {
             long duration = mDeviceIdleController.addPowerSaveTempWhitelistAppForSms(
                     pkgName, 0, reason);
-            if (bopts == null) bopts = BroadcastOptions.makeBasic();
+            BroadcastOptions bopts = BroadcastOptions.makeBasic();
             bopts.setTemporaryAppWhitelistDuration(duration);
-            bundle = bopts.toBundle();
+            return bopts.toBundle();
         } catch (RemoteException e) {
         }
 
-        return bundle;
+        return null;
     }
 
     /**
@@ -1221,7 +1210,7 @@ public abstract class InboundSmsHandler extends StateMachine {
      * @param resultReceiver the receiver handling the delivery result
      */
     private void dispatchSmsDeliveryIntent(byte[][] pdus, String format, int destPort,
-            SmsBroadcastReceiver resultReceiver, boolean isClass0) {
+            SmsBroadcastReceiver resultReceiver) {
         Intent intent = new Intent();
         intent.putExtra("pdus", pdus);
         intent.putExtra("format", format);
@@ -1267,7 +1256,7 @@ public abstract class InboundSmsHandler extends StateMachine {
             intent.addFlags(Intent.FLAG_RECEIVER_INCLUDE_BACKGROUND);
         }
 
-        Bundle options = handleSmsWhitelisting(intent.getComponent(), isClass0);
+        Bundle options = handleSmsWhitelisting(intent.getComponent());
         dispatchIntent(intent, android.Manifest.permission.RECEIVE_SMS,
                 AppOpsManager.OP_RECEIVE_SMS, options, resultReceiver, UserHandle.SYSTEM);
     }
@@ -1451,7 +1440,7 @@ public abstract class InboundSmsHandler extends StateMachine {
                 intent.addFlags(Intent.FLAG_RECEIVER_INCLUDE_BACKGROUND);
                 intent.setComponent(null);
                 // All running users will be notified of the received sms.
-                Bundle options = handleSmsWhitelisting(null, false /* bgActivityStartAllowed */);
+                Bundle options = handleSmsWhitelisting(null);
 
                 dispatchIntent(intent, android.Manifest.permission.RECEIVE_SMS,
                         AppOpsManager.OP_RECEIVE_SMS,
@@ -1519,17 +1508,14 @@ public abstract class InboundSmsHandler extends StateMachine {
         private final String mSmsFormat;
         private final SmsBroadcastReceiver mSmsBroadcastReceiver;
         private final boolean mUserUnlocked;
-        private final boolean mIsClass0;
 
         CarrierServicesSmsFilterCallback(byte[][] pdus, int destPort, String smsFormat,
-                SmsBroadcastReceiver smsBroadcastReceiver,  boolean userUnlocked,
-                boolean isClass0) {
+                         SmsBroadcastReceiver smsBroadcastReceiver,  boolean userUnlocked) {
             mPdus = pdus;
             mDestPort = destPort;
             mSmsFormat = smsFormat;
             mSmsBroadcastReceiver = smsBroadcastReceiver;
             mUserUnlocked = userUnlocked;
-            mIsClass0 = isClass0;
         }
 
         @Override
@@ -1545,7 +1531,7 @@ public abstract class InboundSmsHandler extends StateMachine {
 
                 if (mUserUnlocked) {
                     dispatchSmsDeliveryIntent(
-                            mPdus, mSmsFormat, mDestPort, mSmsBroadcastReceiver, mIsClass0);
+                            mPdus, mSmsFormat, mDestPort, mSmsBroadcastReceiver);
                 } else {
                     // Don't do anything further, leave the message in the raw table if the
                     // credential-encrypted storage is still locked and show the new message
