@@ -360,7 +360,8 @@ public class TelephonyComponentFactory {
      */
     public InboundSmsTracker makeInboundSmsTracker(byte[] pdu, long timestamp, int destPort,
             boolean is3gpp2, boolean is3gpp2WapPdu, String address, String displayAddr,
-            String messageBody) {
+            String messageBody, boolean isClass0, int subId) {
+        Rlog.d(LOG_TAG, "makeInboundSmsTracker");
         return new InboundSmsTracker(pdu, timestamp, destPort, is3gpp2, is3gpp2WapPdu, address,
                 displayAddr, messageBody);
     }
@@ -369,8 +370,10 @@ public class TelephonyComponentFactory {
      * Create a tracker for a multi-part SMS.
      */
     public InboundSmsTracker makeInboundSmsTracker(byte[] pdu, long timestamp, int destPort,
-            boolean is3gpp2, String address, String displayAddr, int referenceNumber, int sequenceNumber,
-            int messageCount, boolean is3gpp2WapPdu, String messageBody) {
+            boolean is3gpp2, String address, String displayAddr, int referenceNumber,
+            int sequenceNumber, int messageCount, boolean is3gpp2WapPdu, String messageBody,
+            boolean isClass0, int subId) {
+        Rlog.d(LOG_TAG, "makeInboundSmsTracker");
         return new InboundSmsTracker(pdu, timestamp, destPort, is3gpp2, address, displayAddr,
                 referenceNumber, sequenceNumber, messageCount, is3gpp2WapPdu, messageBody);
     }
